@@ -1,4 +1,5 @@
 import { Mastra } from '@mastra/core/mastra';
+import { MastraEditor } from '@mastra/editor';
 import { LibSQLStore } from '@mastra/libsql';
 import { DuckDBStore } from '@mastra/duckdb';
 import { MastraCompositeStore } from '@mastra/core/storage';
@@ -17,6 +18,7 @@ export const mastra = new Mastra({
   },
   agents: { agent },
   tools: { startScheduleTool, stopScheduleTool },
+  editor: new MastraEditor(),
   storage: new MastraCompositeStore({
     id: 'composite-storage',
     default: new LibSQLStore({

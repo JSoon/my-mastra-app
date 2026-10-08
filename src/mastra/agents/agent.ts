@@ -1,12 +1,23 @@
 import { pathToFileURL } from 'node:url';
 import { Agent } from '@mastra/core/agent';
 import { TaskSignalProvider } from '@mastra/core/signals';
-import { askUserTool, webFetchTool, webSearchTool } from '@mastra/core/tools';
+import { askUserTool, webFetchTool } from '@mastra/core/tools';
 import { LocalFilesystem, LocalSandbox, WORKSPACE_TOOLS, Workspace } from '@mastra/core/workspace';
 import { Memory } from '@mastra/memory';
 import { startScheduleTool, stopScheduleTool } from '../tools/schedule-tools';
 
 const workspacePath = 'workspace';
+
+// 阿里百炼 (Bailian / DashScope) — OpenAI 兼容模式接入。
+// 用 OpenAICompatibleConfig 对象替代字符串模型 id,让 Mastra 模型路由器
+// 直接打到百炼的 compatible-mode 端点(走 Responses API)。
+// 端点 = `${BAILIAN_BASE_URL}/responses`(api: 'responses' 自动拼 /responses)。
+const bailianModel = {
+  id: `bailian/${process.env.BAILIAN_MODEL_ID ?? 'deepseek-v4.1-flash'}`,
+  url: process.env.BAILIAN_BASE_URL,
+  apiKey: process.env.BAILIAN_API_KEY,
+  api: /** @type {const} */ ('responses'),
+};
 
 const workspace = new Workspace({
   id: 'agent-workspace',
@@ -52,7 +63,7 @@ Ask concise questions when something is unclear or a good question could surface
 
 For local file changes, end with a plain-text URL using ${pathToFileURL(`${workspacePath}/`).href}; avoid Markdown links, localhost, /workspace, relative paths, and static-file servers.
 `,
-  model: 'openai/gpt-5.6-terra',
+  model: bailianModel,
   defaultOptions: {
     maxSteps: 100,
     autoResumeSuspendedTools: true,
@@ -61,7 +72,7 @@ For local file changes, end with a plain-text URL using ${pathToFileURL(`${works
     options: {
       generateTitle: true,
       observationalMemory: {
-        model: 'openai/gpt-5-mini',
+        model: bailianModel,
       },
     },
   }),
@@ -71,7 +82,6 @@ For local file changes, end with a plain-text URL using ${pathToFileURL(`${works
     start_schedule: startScheduleTool,
     stop_schedule: stopScheduleTool,
     web_fetch: webFetchTool,
-    web_search: webSearchTool,
   },
   signals: [new TaskSignalProvider()],
 });
