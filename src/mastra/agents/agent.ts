@@ -70,7 +70,7 @@ For local file changes, end with a plain-text URL using ${pathToFileURL(`${works
   },
   memory: new Memory({
     options: {
-      generateTitle: true,
+      generateTitle: { emitEvent: true },
       observationalMemory: {
         model: bailianModel,
       },
