@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>统一聊天界面技术架构 · 实施参考</title>
+  <style>
+    :root{--ink:#172942;--muted:#60718a;--line:#dce5ee;--paper:#fff;--canvas:#f4f7fb;--navy:#102945;--blue:#2468bf;--teal:#13887f;--gold:#bd7b19;--soft-blue:#eaf3ff;--soft-teal:#e7f7f3;--soft-gold:#fff5df;--shadow:0 12px 34px rgba(24,49,80,.08)}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.68 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif}
+    a{color:var(--blue);text-decoration:none}
+    a:hover{text-decoration:underline}
+    .topline{height:5px;background:linear-gradient(90deg,var(--navy),var(--blue) 52%,var(--teal))}
+    .page{max-width:1440px;margin:auto;padding:28px 28px 88px;display:grid;grid-template-columns:230px minmax(0,1fr);gap:30px}
+    .sidebar{position:sticky;top:25px;align-self:start}
+    .brand{padding:8px 12px 24px;border-bottom:1px solid var(--line);margin-bottom:15px}
+    .brand b{display:block;font-size:18px;letter-spacing:.02em;line-height:1.3}
+    .brand span{color:var(--muted);font-size:12px}
+    .navtitle{padding:7px 12px;color:#8190a5;font-size:11px;letter-spacing:.18em;font-weight:800}
+    .sidebar nav a{display:block;padding:8px 12px;color:#3d536d;border-radius:9px;font-size:13px}
+    .sidebar nav a:hover{background:#e8eef5;text-decoration:none;color:var(--navy)}
+    .sidefoot{font-size:11px;color:#8290a0;padding:18px 12px;border-top:1px solid var(--line);margin-top:16px}
+    main{min-width:0}
+    .hero{position:relative;overflow:hidden;border-radius:22px;background:linear-gradient(120deg,#0d2743,#194b77 68%,#0b7476);color:white;padding:42px 48px 36px;box-shadow:var(--shadow)}
+    .hero:after{content:"";position:absolute;width:390px;height:390px;right:-140px;top:-170px;border:1px solid rgba(255,255,255,.22);border-radius:50%;box-shadow:0 0 0 55px rgba(255,255,255,.035),0 0 0 110px rgba(255,255,255,.025)}
+    .eyebrow{font-size:11px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:#a8d9f7}
+    h1{font-size:36px;line-height:1.25;letter-spacing:-.03em;margin:14px 0 11px}
+    .hero p{max-width:700px;color:#d8e9f4;font-size:16px;margin:0}
+    .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:24px;position:relative;z-index:1}
+    .pill{border:1px solid rgba(255,255,255,.27);border-radius:999px;padding:5px 11px;font-size:11px;color:#eaf6ff;background:rgba(255,255,255,.07)}
+    section{scroll-margin-top:25px;margin-top:27px}
+    .section-head{display:flex;gap:12px;align-items:baseline;margin:0 0 14px}
+    .section-head .num{font-size:12px;color:var(--teal);font-weight:800;letter-spacing:.08em}
+    h2{font-size:23px;line-height:1.3;letter-spacing:-.02em;margin:0}
+    h3{font-size:16px;margin:0 0 9px;line-height:1.4}
+    p{margin:0 0 12px}
+    .lead{color:var(--muted);max-width:930px}
+    .card{min-width:0;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:22px 24px;box-shadow:0 3px 16px rgba(25,55,90,.035)}
+    .card + .card{margin-top:12px}
+    .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+    .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+    .grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
+    .feature{min-height:150px}
+    .feature .icon{width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:var(--soft-blue);color:var(--blue);font-weight:800;margin-bottom:13px}
+    .feature p{font-size:13px;color:var(--muted);margin:0}
+    .callout{border-radius:13px;padding:15px 18px;margin-top:14px;border-left:4px solid var(--teal);background:var(--soft-teal);font-size:13px}
+    .callout.amber{border-left-color:var(--gold);background:var(--soft-gold)}
+    .callout strong{color:#0f5751}
+    .callout.amber strong{color:#855211}
+    .caption{font-size:12px;color:var(--muted);margin:12px 0 0}
+    .stack{display:grid;grid-template-columns:1.05fr 1.3fr 1.1fr;gap:14px;align-items:stretch}
+    .lane{border-radius:14px;padding:17px;border:1px solid var(--line);background:white;min-width:0}
+    .lane.edge{background:#f8fbff;border-color:#cbddf2}
+    .lane.core{background:#f4fbf9;border-color:#c6e7df}
+    .lane h3{margin-bottom:4px}
+    .lane .sub{color:var(--muted);font-size:12px;margin-bottom:13px}
+    .node{background:white;border:1px solid #d7e3ec;border-radius:10px;padding:12px 13px;margin-top:8px;font-size:13px}
+    .node b{display:block;font-size:13px}
+    .node small{display:block;color:var(--muted);line-height:1.55;margin-top:3px;font-size:11px}
+    .node.blue{border-color:#b7d2f3;background:#eef6ff}
+    .node.teal{border-color:#b5dfd8;background:#eaf8f4}
+    .node.gold{border-color:#ecd9ad;background:#fff9ed}
+    .boundary{font-size:11px;color:#658098;letter-spacing:.02em;text-align:center;margin-top:10px;padding-top:9px;border-top:1px dashed #bfd0df}
+    .flow{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:13px;color:#46607c;font-size:12px;font-weight:700}
+    .flow span{background:#edf3f9;border:1px solid #dce6ef;border-radius:999px;padding:5px 10px}
+    .flow i{font-style:normal;color:#8ba3b8}
+    .tablewrap{overflow:auto;border:1px solid var(--line);border-radius:13px;background:white}
+    table{width:100%;border-collapse:collapse;min-width:650px;font-size:13px}
+    th{text-align:left;background:#f2f6fa;color:#38516b;font-size:12px;white-space:nowrap}
+    th,td{padding:11px 14px;border-bottom:1px solid #e8eef4;vertical-align:top}
+    tr:last-child td{border-bottom:0}
+    td:first-child{font-weight:700;color:#28445f}
+    code,kbd{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#f0f4f8;color:#134e78;border-radius:4px;padding:2px 5px;word-break:break-word}
+    pre{background:#10243a;color:#d7e9fa;border-radius:12px;padding:16px 18px;overflow:auto;font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;margin:10px 0}
+    pre code{background:none;color:inherit;padding:0;white-space:pre}
+    .timeline{counter-reset:step;display:grid;gap:9px}
+    .step{display:grid;grid-template-columns:34px 1fr;gap:12px;background:white;border:1px solid var(--line);border-radius:12px;padding:13px 15px}
+    .step:before{counter-increment:step;content:counter(step);width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#e6f3f1;color:#16756b;font-weight:800;font-size:12px}
+    .step b{display:block;font-size:13px}
+    .step p{color:var(--muted);font-size:12px;margin:3px 0 0}
+    .badge{display:inline-block;font-size:10px;letter-spacing:.03em;border-radius:5px;padding:2px 6px;background:#e8f2ff;color:#245c9d;font-weight:800;vertical-align:middle;margin-left:5px}
+    .badge.proposed{background:#fff1d9;color:#8b5b12}
+    .checklist{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px}
+    .checklist li{position:relative;padding-left:24px;font-size:13px;color:#344d65}
+    .checklist li:before{content:"✓";position:absolute;left:0;top:0;color:var(--teal);font-weight:900}
+    .sources{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    .sources a{border:1px solid var(--line);background:white;border-radius:9px;padding:10px 12px;font-size:12px;line-height:1.45}
+    .sources a:hover{background:#f5f9fd;text-decoration:none}
+    .footer{margin-top:35px;padding:22px 4px 0;border-top:1px solid var(--line);color:#7d8ca0;font-size:12px}
+    @media(max-width:1100px){.page{grid-template-columns:minmax(0,1fr);padding:18px 18px 65px}.sidebar{position:static;min-width:0}.brand{padding:0 2px 8px;margin:0}.sidebar nav{display:flex;overflow:auto;gap:2px;padding:7px 0}.sidebar nav a{white-space:nowrap}.navtitle,.sidefoot{display:none}}
+    @media(max-width:760px){.hero{padding:28px 24px}h1{font-size:28px}.grid2,.grid3,.grid4,.stack,.checklist,.sources{grid-template-columns:minmax(0,1fr)}.card{padding:18px}.stack{gap:8px}.lane{padding:14px}.section-head{align-items:center}}
+    @media print{body{background:white;font-size:11px}.topline,.sidebar{display:none}.page{display:block;max-width:none;padding:0}.hero{box-shadow:none;border-radius:0;padding:22px 26px;print-color-adjust:exact;-webkit-print-color-adjust:exact}section{break-inside:avoid;margin-top:18px}.card,.lane,.tablewrap{box-shadow:none;break-inside:avoid}.grid3,.grid4{grid-template-columns:repeat(2,1fr)}a{color:#1d5e9f}}
+  </style>
+</head>
+<body>
+<div class="topline"></div>
+<div class="page">
+  <aside class="sidebar" aria-label="文档目录">
+    <div class="brand"><b>统一聊天界面</b><span>技术架构 · 实施参考</span></div>
+    <div class="navtitle">目录 / CONTENTS</div>
+    <nav>
+      <a href="#decision">01 架构决策</a><a href="#topology">02 系统边界</a><a href="#journey">03 完整请求顺序</a><a href="#identity">04 身份与 iframe</a><a href="#contract">05 消息协议</a><a href="#render">06 工具结果渲染</a><a href="#api">07 接口与部署</a><a href="#delivery">08 实施与验收</a><a href="#baseline">09 当前项目状态</a><a href="#references">10 依据与版本</a>
+    </nav>
+    <div class="sidefoot">文档版本 v0.2 · 2026-10-08<br>设计参考，接口路径均为拟定。</div>
+  </aside>
+  <main>
+    <header class="hero">
+      <div class="eyebrow">Architecture reference / Web chat</div>
+      <h1>统一聊天界面技术架构</h1>
+      <p>一个 Vite + React + AI Elements 聊天页面，嵌入多种业务前端；通过统一接入 API 连接 Mastra Agent，并把身份、会话、AI SDK 7 消息流和工具结果分层处理。</p>
+      <div class="meta"><span class="pill">多系统 iframe 复用</span><span class="pill">单点登录接入</span><span class="pill">流式会话与工具卡片</span><span class="pill">供后续实现参考</span></div>
+    </header>
+
+    <section id="decision">
+      <div class="section-head"><span class="num">01 / DECISION</span><h2>架构决策</h2></div>
+      <p class="lead">业务系统保留自己的登录和页面技术栈；聊天产品独立发布。各系统只接入 iframe 与一次性的身份交接，聊天页统一承担会话体验。</p>
+      <div class="grid4">
+        <div class="card feature"><div class="icon">A</div><h3>一套前端</h3><p>Vite + React + AI Elements 构建独立聊天页。React、Vue、HTML、JSP 页面都只嵌入同一地址。</p></div>
+        <div class="card feature"><div class="icon">B</div><h3>一条接入链</h3><p>业务后端确认原登录用户；接入层建立数字员工会话；Mastra 执行 Agent。</p></div>
+        <div class="card feature"><div class="icon">C</div><h3>一个展示契约</h3><p>接入 API 返回 AI SDK 7 UIMessage 流；React 组件按消息部件与工具名渲染。</p></div>
+        <div class="card feature"><div class="icon">D</div><h3>清晰授权边界</h3><p>接入许可、工具调用许可和目标系统最终授权分别校验，并保留审计记录。</p></div>
+      </div>
+      <div class="callout"><strong>已选技术路径：</strong>聊天页使用 <code>@ai-sdk/react</code> 的 <code>useChat()</code> 管理消息与流状态，AI Elements 负责展示。接入 API 在身份校验后返回 AI SDK 7 UIMessage 流；Mastra 侧使用 <code>@mastra/ai-sdk</code> 适配。iframe 接入和企业身份边界仍由接入层负责。</div>
+    </section>
+
+    <section id="topology">
+      <div class="section-head"><span class="num">02 / TOPOLOGY</span><h2>系统边界与职责</h2></div>
+      <div class="stack" role="group" aria-label="业务系统通过 iframe 嵌入统一聊天页，聊天页经接入 API 调用 Mastra 与企业工具网关">
+        <div class="lane edge"><h3>业务系统域</h3><div class="sub">多套老系统，各自发布</div>
+          <div class="node"><b>React / Vue / HTML / JSP 页面</b><small>显示入口、打开 iframe、处理尺寸与关闭事件</small></div>
+          <div class="node blue"><b>业务系统后端</b><small>校验已有登录；为该用户申请短时、一次性接入凭据</small></div>
+          <div class="boundary">边界 ①：现有业务登录只由业务系统判定</div>
+        </div>
+        <div class="lane core"><h3>统一聊天产品域</h3><div class="sub">集中开发、部署与升级</div>
+          <div class="node teal"><b>Vite + React + AI Elements 独立聊天页</b><small>iframe 桥接、useChat 流状态、消息部件渲染、会话切换</small></div>
+          <div class="node teal"><b>数字员工接入 API / BFF</b><small>凭据交换、会话认证、Agent 路由、流转发、历史读取、审计关联</small></div>
+          <div class="boundary">边界 ②：聊天会话令牌与 conversationId 分离</div>
+        </div>
+        <div class="lane"><h3>Agent 与业务能力域</h3><div class="sub">运行、调用和最终授权</div>
+          <div class="node blue"><b>Mastra Agent / Memory</b><small>模型推理、工具意图、运行状态、会话记忆</small></div>
+          <div class="node gold"><b>企业工具网关</b><small>逐次工具准入、目标凭据处理、限流、结果治理与审计</small></div>
+          <div class="node"><b>目标业务系统</b><small>持有业务数据，并作最终数据与操作授权</small></div>
+          <div class="boundary">边界 ③：Agent 可调用不代表目标业务已授权</div>
+        </div>
+      </div>
+      <div class="flow" aria-label="请求路径"><span>宿主页面</span><i>→</i><span>聊天 iframe</span><i>→</i><span>接入 API</span><i>→</i><span>Mastra</span><i>→</i><span>工具网关</span><i>→</i><span>目标系统</span></div>
+      <p class="caption">这是逻辑责任划分，不要求每个方框单独部署。首期接入 API、Mastra 和工具网关可以按实际规模合并部署，但权限检查仍须分别执行。</p>
+    </section>
+
+    <section id="journey">
+      <div class="section-head"><span class="num">03 / REQUEST ORDER</span><h2>从打开页面到收到回答</h2></div>
+      <div class="timeline">
+        <div class="step"><div><b>加载聊天页</b><p>宿主页面嵌入统一聊天 URL。URL 只放非敏感配置，例如系统标识和界面模式；聊天页向父页面发出 <code>CHAT_READY</code>。</p></div></div>
+        <div class="step"><div><b>确认现有登录并申请接入</b><p>宿主页面调用自己的后端；后端根据原有业务会话确认用户，向数字员工接入层申请短时、一次性凭据。此步不创建聊天会话。</p></div></div>
+        <div class="step"><div><b>完成 iframe 身份交接</b><p>父页面定向发送 <code>CHAT_BOOTSTRAP</code>；iframe 校验来源后调用 <code>POST /agent/auth/exchange</code>。接入层建立数字员工会话并返回允许的 Agent 范围。</p></div></div>
+        <div class="step"><div><b>读取或新建 conversationId</b><p>聊天页读取归属于该用户的会话列表或创建新会话；<code>conversationId</code> 仅用于定位历史，不能代替身份凭据。</p></div></div>
+        <div class="step"><div><b>发送消息并接收流</b><p>聊天页的 <code>useChat()</code> 调用 <code>POST /agent/chat/messages</code>，携带数字员工会话凭据与 conversationId。接入层鉴权、路由到 Mastra，并返回 AI SDK 7 UIMessage 流。</p></div></div>
+        <div class="step"><div><b>逐次授权、渲染与留痕</b><p>工具网关和目标系统分别执行权限检查。<code>useChat()</code> 归并流状态；工具结果进入对应 React 组件；运行、拒绝和异常关联审计标识。</p></div></div>
+      </div>
+      <div class="callout amber"><strong>登录体验：</strong>目标是复用业务系统的既有登录，不让用户再登录一次。但 iframe 不会天然继承父页面 Cookie；接入凭据交换必须由已验证的业务后端与接入层共同完成。</div>
+    </section>
+
+    <section id="identity">
+      <div class="section-head"><span class="num">04 / TRUST</span><h2>iframe、会话与安全边界</h2></div>
+      <div class="grid2">
+        <div class="card"><h3>跨窗口协议 <span class="badge proposed">拟定</span></h3>
+          <pre><code>{
+  "v": 1,
+  "type": "CHAT_BOOTSTRAP",
+  "requestId": "opaque-id",
+  "payload": { "oneTimeCode": "short-lived-code" }
+}</code></pre>
+          <p class="caption">约定 <code>CHAT_READY</code>、<code>CHAT_BOOTSTRAP</code>、<code>CHAT_RESIZE</code>、<code>CHAT_CLOSE</code>。父子窗口均校验 <code>event.origin</code> 和 <code>event.source</code>，发送时使用精确 <code>targetOrigin</code>。消息字段做运行时校验，避免重复提交。</p>
+        </div>
+        <div class="card"><h3>凭据边界</h3>
+          <div class="tablewrap"><table><thead><tr><th>数据</th><th>用途</th><th>处理方式</th></tr></thead><tbody>
+            <tr><td>业务登录态</td><td>业务系统识别原用户</td><td>留在原系统；不得直接当作 Mastra 凭据</td></tr>
+            <tr><td>一次性接入码</td><td>首次建立数字员工身份关联</td><td>短期、单次、绑定用户/宿主/目标；不进 URL</td></tr>
+            <tr><td>数字员工会话</td><td>每次聊天 API 鉴权</td><td>由接入层验证；按部署条件选同站点 BFF 或短期令牌</td></tr>
+            <tr><td>conversationId</td><td>定位聊天历史</td><td>服务端校验归属；不视为授权凭据</td></tr>
+            <tr><td>目标系统凭据</td><td>代表用户调用业务接口</td><td>在工具网关/后端处理；目标系统仍作最终授权</td></tr>
+          </tbody></table></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:13px"><h3>浏览器与部署约束</h3>
+        <div class="grid3">
+          <div><b>嵌入许可</b><p class="caption">聊天页的响应设置 <code>CSP frame-ancestors</code> 宿主白名单；宿主页允许加载聊天页（如 <code>frame-src</code>）。检查现有 <code>X-Frame-Options</code>。</p></div>
+          <div><b>跨站点 Cookie</b><p class="caption">不同站点下，iframe Cookie 可能被浏览器限制。优先验证同站点代理/BFF；若采用浏览器持有短期令牌，须明确续期、退出与失效策略。</p></div>
+          <div><b>持续流连接</b><p class="caption">聊天消息是 POST 流式响应；代理须允许逐块输出，配置合理的空闲超时和取消传递。跨源调用仅对实际需要的来源开放 CORS。</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="contract">
+      <div class="section-head"><span class="num">05 / MESSAGE CONTRACT</span><h2>流式消息协议</h2></div>
+      <p class="lead">浏览器端采用 AI SDK 7 的 <code>UIMessage</code> 与消息流协议：<code>useChat()</code> 负责发送、增量更新、停止和错误状态，界面读取 <code>messages[].parts</code>。Mastra 原生 <code>ChunkType</code> 留在服务端，由 <code>@mastra/ai-sdk</code> 转换；首期不另造一套与 AI SDK 并行的浏览器事件封套。</p>
+      <div class="grid2">
+        <div class="card"><h3>明确匹配 AI SDK 7</h3>
+          <pre><code>// Mastra 服务端：在受保护的接入链后提供消息流
+chatRoute({ path: '/chat/:agentId', version: 'v7' })
+
+// React 聊天页：接入 API 对外暴露受保护的聊天路径
+useChat({ transport: new DefaultChatTransport({
+  api: '/agent/chat/messages'
+}) })</code></pre>
+          <p class="caption"><code>version: 'v7'</code> 选择 UI 消息流格式，并非 Agent 或模型版本。Mastra 的 <code>chatRoute()</code> 默认仍为 v5；新项目应显式指定 v7。示例路径为架构拟定，实际路径和鉴权方式以接入 API 实现为准。</p>
+        </div>
+        <div class="card"><h3>消息部件与展示</h3>
+          <div class="tablewrap"><table><thead><tr><th>UIMessage 部件</th><th>界面职责</th><th>验收重点</th></tr></thead><tbody>
+            <tr><td>文本部件</td><td>AI Elements 消息组件增量渲染</td><td>完成、空回答、异常</td></tr>
+            <tr><td>工具部件</td><td>按工具名及业务展示类型渲染状态与结果</td><td>执行中、成功、失败、无权限</td></tr>
+            <tr><td>文件、来源等部件</td><td>预览或展示受控链接</td><td>类型、权限、过期处理</td></tr>
+            <tr><td>自定义数据部件</td><td>承载需要扩展的业务展示数据</td><td>服务端裁剪、类型校验、版本管理</td></tr>
+          </tbody></table></div>
+        </div>
+      </div>
+      <div class="callout"><strong>接入约束：</strong>接入 API 必须先鉴权并校验 conversationId 归属，再将请求交给 Mastra。若它需要自定义转发、审计或消息处理，可用 <code>handleChatStream()</code> 实现同样的 v7 输出。历史消息恢复也须转换为匹配 v7 的 UIMessage；断线续传需要另行设计与验证。</div>
+    </section>
+
+    <section id="render">
+      <div class="section-head"><span class="num">06 / RENDERING</span><h2>工具结果如何保证可见、可解释</h2></div>
+      <div class="grid3">
+        <div class="card"><h3>1 · 工具定义</h3><p>每个工具用 <code>outputSchema</code> 校验业务返回，避免缺字段或类型漂移。模型消费数据与界面展示数据分开：<code>toModelOutput</code> 面向模型，<code>transform.display</code> 可处理浏览器可见内容。</p></div>
+        <div class="card"><h3>2 · 渲染注册表</h3><p>React 以工具名及可选的 <code>displayType + 版本</code> 查找组件，例如状态卡、表格、图片、文件、审批。组件只接收经过服务端裁剪和前端校验的数据。</p></div>
+        <div class="card"><h3>3 · 兜底与安全</h3><p>未知类型显示“暂不支持的结果”与安全摘要，不静默丢弃。Markdown 做安全渲染；附件经受控 URL 获取；工具异常单独显示。</p></div>
+      </div>
+      <div class="tablewrap" style="margin-top:13px"><table><thead><tr><th>内容类别</th><th>React / AI Elements 组件策略</th><th>必须覆盖的状态</th></tr></thead><tbody>
+        <tr><td>普通回答</td><td>文本 / Markdown 组件</td><td>增量、完成、失败、空回答</td></tr>
+        <tr><td>业务工具</td><td>按 displayType 命中的专用卡片</td><td>待执行、执行中、成功、失败、无权限</td></tr>
+        <tr><td>文件与图片</td><td>预览、下载或受控链接</td><td>加载失败、过期、无权限、类型未知</td></tr>
+        <tr><td>需人确认的动作</td><td>审批/拒绝组件，回传显式决定</td><td>待确认、已提交、已失效、重复点击</td></tr>
+        <tr><td>未知事件</td><td>安全摘要与诊断编号</td><td>保留 trace/runId 供排查</td></tr>
+      </tbody></table></div>
+      <p class="caption">“渲染正确”必须由工具数据契约、流事件映射、组件注册和异常兜底共同保证；仅有 Agent 的最终文字不能覆盖全部工具输出。</p>
+    </section>
+
+    <section id="api">
+      <div class="section-head"><span class="num">07 / API & DEPLOY</span><h2>接口建议与部署</h2></div>
+      <div class="tablewrap"><table><thead><tr><th>接口（建议）</th><th>调用方</th><th>职责</th><th>要点</th></tr></thead><tbody>
+        <tr><td><code>POST /api/agent/access</code></td><td>宿主页面 → 业务后端</td><td>确认原业务登录并获取一次性接入码</td><td>由服务端绑定用户、系统、有效期</td></tr>
+        <tr><td><code>POST /agent/auth/exchange</code></td><td>聊天 iframe → 接入层</td><td>兑换数字员工会话</td><td>原子单次使用；校验宿主与允许的 Agent</td></tr>
+        <tr><td><code>POST /agent/chat/messages</code></td><td>聊天 iframe → 接入层</td><td>发送消息并返回 AI SDK 7 UIMessage 流</td><td>鉴权、会话归属、取消与审计</td></tr>
+        <tr><td><code>GET /agent/chat/conversations</code></td><td>聊天 iframe → 接入层</td><td>读取本用户会话列表</td><td>服务端按用户过滤</td></tr>
+        <tr><td><code>GET /agent/chat/conversations/{id}/messages</code></td><td>聊天 iframe → 接入层</td><td>恢复历史消息</td><td>历史转换为相同的 UI 展示模型</td></tr>
+        <tr><td><code>POST /agent/chat/tool-decisions</code></td><td>聊天 iframe → 接入层</td><td>提交需确认工具的决定</td><td>按 runId/toolCallId 校验权限和时效</td></tr>
+      </tbody></table></div>
+      <p class="caption">以上路径是架构建议，不代表当前仓库已实现。真正的路由、身份格式和错误码应在接入层接口评审后定稿。</p>
+      <div class="card" style="margin-top:13px"><h3>新聊天项目的依赖基线</h3>
+        <div class="tablewrap"><table><thead><tr><th>位置</th><th>依赖与版本约束</th><th>用途</th></tr></thead><tbody>
+          <tr><td>聊天前端</td><td>Vite + TypeScript + React 19；<code>ai@7</code> 与兼容的 <code>@ai-sdk/react</code></td><td><code>useChat()</code>、消息状态与流传输</td></tr>
+          <tr><td>界面组件</td><td>AI Elements + shadcn/ui + Tailwind CSS 4</td><td>消息、工具和输入组件；按需安装组件</td></tr>
+          <tr><td>Mastra 服务端</td><td><code>@mastra/ai-sdk &gt;= 1.9.0</code>；聊天路由显式 <code>version: 'v7'</code></td><td>将 Agent 输出转换为 AI SDK 7 UI 消息流</td></tr>
+          <tr><td>运行环境</td><td>Node.js 22+、ESM；提交依赖锁文件</td><td>满足 AI SDK 7 运行要求并固定可复现安装</td></tr>
+        </tbody></table></div>
+        <p class="caption">Vite 前端与 Mastra 服务可分别开发、发布；浏览器只能调用受保护的接入 API。实际安装以稳定版依赖与锁文件为准，不使用预发布版本。</p>
+      </div>
+      <div class="grid2" style="margin-top:13px">
+        <div class="card"><h3>推荐部署形态</h3><p>统一域名承载聊天静态资源与接入 API，例如 <code>chat.company.example</code>。各业务系统仅配置 iframe 地址及宿主白名单；接入 API 在服务端调用 Mastra。代理对聊天流关闭缓冲、保留逐块响应。</p><p class="caption">跨站点 Cookie 的可用性要按实际域名和目标浏览器验证；同站点反向代理方案可作为部署选项。</p></div>
+        <div class="card"><h3>配置与版本治理</h3><p>聊天页版本集中发布；iframe 桥接协议单独带版本，UI 消息流固定为 AI SDK 7 契约。业务自定义数据和工具展示类型分别版本化。宿主系统使用可配置 Agent/主题/语言，不允许自行指定未经授权的用户或工具权限。</p><p class="caption">发布需支持灰度与回滚；记录宿主系统、前端版本、AI SDK 流契约版本及 Agent 版本，便于追踪问题。</p></div>
+      </div>
+    </section>
+
+    <section id="delivery">
+      <div class="section-head"><span class="num">08 / DELIVERY</span><h2>实施顺序与验收</h2></div>
+      <div class="grid3">
+        <div class="card"><h3>阶段 1 · 最小只读闭环</h3><p>选一个业务系统、一个只读工具；完成已有登录 → iframe 接入 → 数字员工会话 → Mastra → 工具网关 → 目标系统授权 → 结果卡片 → 审计。</p></div>
+        <div class="card"><h3>阶段 2 · 多系统复用</h3><p>固化宿主接入脚本、白名单、配置项与版本策略；验证 React、Vue、HTML/JSP 至少各一条真实嵌入路径。</p></div>
+        <div class="card"><h3>阶段 3 · 完整交互</h3><p>加入历史恢复、取消、附件、审批、失败重试和运维指标。新工具按 schema 与渲染注册流程接入。</p></div>
+      </div>
+      <div class="card" style="margin-top:13px"><h3>上线前验收清单</h3><ul class="checklist">
+        <li>未登录、已退出及超时用户无法继续使用聊天</li>
+        <li>伪造 postMessage 来源或重放接入码被拒绝</li>
+        <li>无权用户无法读取他人的 conversationId</li>
+        <li>工具未授权及目标系统拒绝均有明确反馈与审计</li>
+        <li>文本、工具、文件、未知类型及错误均可展示</li>
+        <li>流式输出可取消，代理不缓存至结束才返回</li>
+        <li>跨站点 Cookie 受限时仍有明确可用方案</li>
+        <li>各业务系统 CSP / X-Frame-Options 与 iframe 尺寸通过实测</li>
+        <li>历史消息刷新后与实时渲染语义一致，均符合 AI SDK 7 UIMessage</li>
+        <li>浏览器最低版本覆盖实际老旧系统用户</li>
+      </ul></div>
+    </section>
+
+    <section id="baseline">
+      <div class="section-head"><span class="num">09 / BASELINE</span><h2>当前仓库与目标状态</h2></div>
+      <div class="tablewrap"><table><thead><tr><th>范围</th><th>当前项目快照 · 2026-10-08</th><th>后续目标</th></tr></thead><tbody>
+        <tr><td>Mastra 服务</td><td>已有 Agent、Memory、工具、存储和观测配置；已安装 <code>@mastra/ai-sdk@1.10.7</code></td><td>通过受保护的接入 API 对业务用户开放</td></tr>
+        <tr><td>业务聊天前端</td><td>已创建 <code>chat-ui/</code>，安装 React 19、Vite 8、<code>ai@7</code>、<code>@ai-sdk/react</code> 和 AI Elements 基础组件；目前仍为脚手架页面</td><td>实现聊天页、身份交接及工具渲染注册表</td></tr>
+        <tr><td>聊天接入</td><td><code>src/mastra/index.ts</code> 尚未注册专用聊天路由，也没有业务身份接入层</td><td>设计并实现凭据交换、AI SDK 7 消息流、历史与审计接口</td></tr>
+        <tr><td>业务嵌入</td><td>尚无各宿主系统的 iframe 接入代码</td><td>按宿主白名单逐个完成真实浏览器验收</td></tr>
+      </tbody></table></div>
+      <div class="callout amber"><strong>范围说明：</strong>本页是后续实现参考，不表示身份协议、目标系统授权、域名部署或 iframe 策略已在当前环境落地。现有通用 Agent 含本地工作区及工具能力，不能把开发用 Studio 直接当作业务聊天页面暴露。</div>
+    </section>
+
+    <section id="references">
+      <div class="section-head"><span class="num">10 / REFERENCES</span><h2>依据与版本记录</h2></div>
+      <div class="sources">
+        <a href="https://mastra.ai/reference/streaming/ChunkType" target="_blank" rel="noopener noreferrer">Mastra · ChunkType 流事件参考 ↗</a>
+        <a href="https://mastra.ai/reference/client-js/agents" target="_blank" rel="noopener noreferrer">Mastra · Client SDK Agents API ↗</a>
+        <a href="https://mastra.ai/docs/agents/tools" target="_blank" rel="noopener noreferrer">Mastra · 工具与 outputSchema ↗</a>
+        <a href="https://mastra.ai/reference/ai-sdk/chat-route" target="_blank" rel="noopener noreferrer">Mastra · AI SDK chatRoute ↗</a>
+        <a href="https://mastra.ai/integrations/frameworks/vite-react" target="_blank" rel="noopener noreferrer">Mastra · React + Vite 集成 ↗</a>
+        <a href="https://mastra.ai/blog/ai-sdk-v7-support" target="_blank" rel="noopener noreferrer">Mastra · AI SDK 7 支持 ↗</a>
+        <a href="https://vercel.com/changelog/ai-sdk-7" target="_blank" rel="noopener noreferrer">Vercel · AI SDK 7 发布 ↗</a>
+        <a href="https://elements.ai-sdk.dev/docs/setup" target="_blank" rel="noopener noreferrer">AI Elements · 安装前提 ↗</a>
+        <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/frame-ancestors" target="_blank" rel="noopener noreferrer">MDN · frame-ancestors ↗</a>
+        <a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage" target="_blank" rel="noopener noreferrer">MDN · postMessage 安全要求 ↗</a>
+        <a href="https://developer.mozilla.org/en-US/docs/Web/Privacy/Guides/Third-party_cookies" target="_blank" rel="noopener noreferrer">MDN · 第三方 Cookie 与 iframe ↗</a>
+        <a href="https://ai-sdk.dev/docs/reference/ai-sdk-ui" target="_blank" rel="noopener noreferrer">AI SDK · UI 框架支持 ↗</a>
+      </div>
+      <div class="card" style="margin-top:13px"><h3>版本记录 · Changelog</h3><p style="font-size:13px"><b>v0.2 · 2026-10-08</b>　确认独立聊天页采用 Vite + React + AI Elements、AI SDK 7 UIMessage 流；创建 <code>chat-ui/</code> 并安装前后端依赖，明确尚待实现的聊天和身份接口。</p><p style="margin:0;font-size:13px"><b>v0.1 · 2026-10-08</b>　首次形成多业务系统复用的聊天界面技术架构，包含嵌入、身份、事件、渲染、接口、部署及验收建议。</p></div>
+    </section>
+    <footer class="footer">统一聊天界面技术架构 · 文件名保持稳定，后续变更在“版本记录”中维护 · 本文不包含真实凭据或生产地址。</footer>
+  </main>
+</div>
+</body>
+</html>
