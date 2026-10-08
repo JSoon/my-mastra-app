@@ -15,6 +15,8 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react(), tailwindcss()],
+    // Pre-bundle Mermaid's CommonJS dependencies (e.g. dayjs) in dev as well.
+    optimizeDeps: { include: ['@streamdown/mermaid', '@streamdown/math'] },
     server: { proxy },
     preview: { proxy },
     resolve: {
