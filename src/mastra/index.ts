@@ -1,4 +1,5 @@
 import { Mastra } from '@mastra/core/mastra';
+import { chatRoute } from '@mastra/ai-sdk';
 import { MastraEditor } from '@mastra/editor';
 import { LibSQLStore } from '@mastra/libsql';
 import { DuckDBStore } from '@mastra/duckdb';
@@ -17,6 +18,17 @@ export const mastra = new Mastra({
     externals: ['@duckdb/node-bindings'],
   },
   agents: { agent },
+  server: {
+    apiRoutes: [
+      chatRoute({
+        path: '/chat/agent',
+        agent: 'agent',
+        version: 'v7',
+        sendSources: true,
+        onError: () => '回复生成失败，请稍后重试。',
+      }),
+    ],
+  },
   tools: { startScheduleTool, stopScheduleTool },
   editor: new MastraEditor(),
   storage: new MastraCompositeStore({

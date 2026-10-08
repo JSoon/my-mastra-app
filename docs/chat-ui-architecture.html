@@ -103,7 +103,7 @@
     <nav>
       <a href="#decision">01 架构决策</a><a href="#topology">02 系统边界</a><a href="#journey">03 完整请求顺序</a><a href="#identity">04 身份与 iframe</a><a href="#contract">05 消息协议</a><a href="#render">06 工具结果渲染</a><a href="#api">07 接口与部署</a><a href="#delivery">08 实施与验收</a><a href="#baseline">09 当前项目状态</a><a href="#references">10 依据与版本</a>
     </nav>
-    <div class="sidefoot">文档版本 v0.2 · 2026-10-08<br>设计参考，接口路径均为拟定。</div>
+    <div class="sidefoot">文档版本 v0.3 · 2026-10-08<br>聊天接口已本地接入，业务身份接口仍为拟定。</div>
   </aside>
   <main>
     <header class="hero">
@@ -287,8 +287,8 @@ useChat({ transport: new DefaultChatTransport({
       <div class="section-head"><span class="num">09 / BASELINE</span><h2>当前仓库与目标状态</h2></div>
       <div class="tablewrap"><table><thead><tr><th>范围</th><th>当前项目快照 · 2026-10-08</th><th>后续目标</th></tr></thead><tbody>
         <tr><td>Mastra 服务</td><td>已有 Agent、Memory、工具、存储和观测配置；已安装 <code>@mastra/ai-sdk@1.10.7</code></td><td>通过受保护的接入 API 对业务用户开放</td></tr>
-        <tr><td>业务聊天前端</td><td>已创建 <code>chat-ui/</code>，安装 React 19、Vite 8、<code>ai@7</code>、<code>@ai-sdk/react</code> 和 AI Elements 基础组件；目前仍为脚手架页面</td><td>实现聊天页、身份交接及工具渲染注册表</td></tr>
-        <tr><td>聊天接入</td><td><code>src/mastra/index.ts</code> 尚未注册专用聊天路由，也没有业务身份接入层</td><td>设计并实现凭据交换、AI SDK 7 消息流、历史与审计接口</td></tr>
+        <tr><td>业务聊天前端</td><td>已创建 <code>chat-ui/</code>，安装 React 19、Vite 8、<code>ai@7</code>、<code>@ai-sdk/react</code> 和 AI Elements 基础组件；已实现流式聊天、多轮 Memory 上下文、停止生成、新对话、错误重试及通用工具展示</td><td>接入业务身份、历史恢复及业务工具渲染注册表</td></tr>
+        <tr><td>聊天接入</td><td><code>src/mastra/index.ts</code> 已注册 <code>POST /chat/agent</code>，使用 v7 消息流；Vite 同源代理已接入，匿名随机 thread/resource 用于本地开发</td><td>实现凭据交换、服务端身份绑定、会话归属校验、历史与审计接口</td></tr>
         <tr><td>业务嵌入</td><td>尚无各宿主系统的 iframe 接入代码</td><td>按宿主白名单逐个完成真实浏览器验收</td></tr>
       </tbody></table></div>
       <div class="callout amber"><strong>范围说明：</strong>本页是后续实现参考，不表示身份协议、目标系统授权、域名部署或 iframe 策略已在当前环境落地。现有通用 Agent 含本地工作区及工具能力，不能把开发用 Studio 直接当作业务聊天页面暴露。</div>
@@ -310,7 +310,7 @@ useChat({ transport: new DefaultChatTransport({
         <a href="https://developer.mozilla.org/en-US/docs/Web/Privacy/Guides/Third-party_cookies" target="_blank" rel="noopener noreferrer">MDN · 第三方 Cookie 与 iframe ↗</a>
         <a href="https://ai-sdk.dev/docs/reference/ai-sdk-ui" target="_blank" rel="noopener noreferrer">AI SDK · UI 框架支持 ↗</a>
       </div>
-      <div class="card" style="margin-top:13px"><h3>版本记录 · Changelog</h3><p style="font-size:13px"><b>v0.2 · 2026-10-08</b>　确认独立聊天页采用 Vite + React + AI Elements、AI SDK 7 UIMessage 流；创建 <code>chat-ui/</code> 并安装前后端依赖，明确尚待实现的聊天和身份接口。</p><p style="margin:0;font-size:13px"><b>v0.1 · 2026-10-08</b>　首次形成多业务系统复用的聊天界面技术架构，包含嵌入、身份、事件、渲染、接口、部署及验收建议。</p></div>
+      <div class="card" style="margin-top:13px"><h3>版本记录 · Changelog</h3><p style="font-size:13px"><b>v0.3 · 2026-10-08</b>　接入现有 Mastra Agent 的 v7 聊天接口，实现流式页面和本地匿名会话；业务鉴权与历史恢复仍待实现。</p><p style="font-size:13px"><b>v0.2 · 2026-10-08</b>　确认独立聊天页采用 Vite + React + AI Elements、AI SDK 7 UIMessage 流；创建 <code>chat-ui/</code> 并安装前后端依赖，明确尚待实现的聊天和身份接口。</p><p style="margin:0;font-size:13px"><b>v0.1 · 2026-10-08</b>　首次形成多业务系统复用的聊天界面技术架构，包含嵌入、身份、事件、渲染、接口、部署及验收建议。</p></div>
     </section>
     <footer class="footer">统一聊天界面技术架构 · 文件名保持稳定，后续变更在“版本记录”中维护 · 本文不包含真实凭据或生产地址。</footer>
   </main>
