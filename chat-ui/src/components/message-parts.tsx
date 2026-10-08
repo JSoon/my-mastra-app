@@ -44,6 +44,28 @@ export function DocumentSourcePart({ part }: { part: SourceDocumentUIPart }) {
   )
 }
 
+export function SandboxExitPart({ data }: { data: unknown }) {
+  const result = data && typeof data === 'object' ? data as Record<string, unknown> : {}
+  const exitCode = typeof result.exitCode === 'number' && Number.isInteger(result.exitCode)
+    ? result.exitCode : undefined
+  const duration = typeof result.executionTimeMs === 'number' && Number.isFinite(result.executionTimeMs) && result.executionTimeMs >= 0
+    ? result.executionTimeMs : undefined
+  const failed = result.success === false || (exitCode !== undefined && exitCode !== 0)
+  const interrupted = result.timedOut === true || result.killed === true
+  const label = result.timedOut === true ? '命令执行超时'
+    : result.killed === true ? '命令已终止'
+      : failed ? '命令执行失败'
+        : result.success === true || exitCode === 0 ? '命令执行完成' : '命令已结束'
+
+  return (
+    <p className={`text-xs ${failed || interrupted ? 'text-destructive' : 'text-muted-foreground'}`}>
+      {label}
+      {exitCode !== undefined && <span> · 退出码 {exitCode}</span>}
+      {duration !== undefined && <span> · 耗时 {Math.round(duration)} 毫秒</span>}
+    </p>
+  )
+}
+
 export function ReasoningPart({ part }: { part: ReasoningUIPart }) {
   const streaming = part.state === 'streaming'
   return (

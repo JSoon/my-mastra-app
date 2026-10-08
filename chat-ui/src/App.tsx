@@ -17,7 +17,7 @@ import { Message, MessageContent, MessageResponse } from '@/components/ai-elemen
 import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from '@/components/ai-elements/tool'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { DocumentSourcePart, FilePart, ReasoningPart } from '@/components/message-parts'
+import { DocumentSourcePart, FilePart, ReasoningPart, SandboxExitPart } from '@/components/message-parts'
 import { fetchMessages, fetchThreads, getActiveThreadId, getResourceId, saveActiveThreadId } from '@/lib/history'
 import type { ConversationState, Thread } from '@/lib/history'
 import './App.css'
@@ -118,6 +118,7 @@ function Chat({ conversation, resourceId, onBusyChange, onSent, onFinish, onThre
                     if (part.type === 'file') return <FilePart key={key} part={part} />
                     if (part.type === 'source-document') return <DocumentSourcePart key={key} part={part} />
                     if (part.type === 'reasoning') return <ReasoningPart key={key} part={part} />
+                    if (part.type === 'data-sandbox-exit') return <SandboxExitPart key={key} data={part.data} />
                     if (isToolUIPart(part)) {
                       return (
                         <Tool key={key} defaultOpen={part.state === 'approval-requested'}>
