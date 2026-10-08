@@ -1,24 +1,23 @@
 import { pathToFileURL } from 'node:url';
 import { Agent } from '@mastra/core/agent';
-import type { OpenAICompatibleConfig } from '@mastra/core/llm';
 import { TaskSignalProvider } from '@mastra/core/signals';
 import { askUserTool, webFetchTool } from '@mastra/core/tools';
 import { LocalFilesystem, LocalSandbox, WORKSPACE_TOOLS, Workspace } from '@mastra/core/workspace';
 import { Memory } from '@mastra/memory';
 import { startScheduleTool, stopScheduleTool } from '../tools/schedule-tools';
+import { BailianResponsesModel } from '../models/bailian';
 
 const workspacePath = 'workspace';
 
 // 阿里百炼 (Bailian / DashScope) — OpenAI 兼容模式接入。
-// 用 OpenAICompatibleConfig 对象替代字符串模型 id,让 Mastra 模型路由器
-// 直接打到百炼的 compatible-mode 端点(走 Responses API)。
+// 保留 Mastra 模型路由，补齐百炼 Responses 推理摘要事件的兼容转换。
 // 端点 = `${BAILIAN_BASE_URL}/responses`(api: 'responses' 自动拼 /responses)。
-const bailianModel: OpenAICompatibleConfig = {
+const bailianModel = new BailianResponsesModel({
   id: `bailian/${process.env.BAILIAN_MODEL_ID ?? 'deepseek-v4.1-flash'}`,
   url: process.env.BAILIAN_BASE_URL,
   apiKey: process.env.BAILIAN_API_KEY,
   api: 'responses',
-};
+});
 
 const workspace = new Workspace({
   id: 'agent-workspace',
