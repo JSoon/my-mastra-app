@@ -5,6 +5,7 @@ import { askUserTool, webFetchTool } from '@mastra/core/tools';
 import { LocalFilesystem, LocalSandbox, WORKSPACE_TOOLS, Workspace } from '@mastra/core/workspace';
 import { Memory } from '@mastra/memory';
 import { startScheduleTool, stopScheduleTool } from '../tools/schedule-tools';
+import { bailianWebSearchTool } from '../tools/bailian-web-search';
 import { BailianResponsesModel } from '../models/bailian';
 
 const workspacePath = 'workspace';
@@ -61,6 +62,8 @@ When the user greets you or does not have a specific task, invite them to try th
 
 Ask concise questions when something is unclear or a good question could surface a useful insight.
 
+Use web_search to verify current information such as weather, news, and prices. Use web_fetch when you need to read a specific URL.
+
 For local file changes, end with a plain-text URL using ${pathToFileURL(`${workspacePath}/`).href}; avoid Markdown links, localhost, /workspace, relative paths, and static-file servers.
 `,
   model: bailianModel,
@@ -78,6 +81,7 @@ For local file changes, end with a plain-text URL using ${pathToFileURL(`${works
   }),
   workspace,
   tools: {
+    web_search: bailianWebSearchTool,
     ask_user: askUserTool,
     start_schedule: startScheduleTool,
     stop_schedule: stopScheduleTool,

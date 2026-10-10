@@ -14,6 +14,7 @@ import {
 } from '@mastra/observability';
 import { agent } from './agents/agent';
 import { startScheduleTool, stopScheduleTool } from './tools/schedule-tools';
+import { bailianWebSearchTool } from './tools/bailian-web-search';
 
 export const mastra = new Mastra({
   bundler: {
@@ -77,7 +78,7 @@ export const mastra = new Mastra({
       }),
     ],
   },
-  tools: { startScheduleTool, stopScheduleTool },
+  tools: { startScheduleTool, stopScheduleTool, bailianWebSearchTool },
   editor: new MastraEditor(),
   storage: new MastraCompositeStore({
     id: 'composite-storage',
